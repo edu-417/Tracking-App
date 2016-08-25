@@ -1,11 +1,10 @@
 package com.example.eduardo.tabtest;
 
-import android.*;
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,8 +16,8 @@ import android.util.Log;
 
 import com.example.eduardo.tabtest.data.DbUtilities;
 import com.example.eduardo.tabtest.data.TrackAppContract;
+import com.example.eduardo.tabtest.service.SendLocationService;
 import com.example.eduardo.tabtest.utils.NetworkUtilities;
-import com.example.eduardo.tabtest.utils.Utilities;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -29,12 +28,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +43,7 @@ public class MapTabFragment extends SupportMapFragment implements LoaderManager.
     private static final int LOCATION_INTERVAL_SECONDS = 5;
     private static final float MULTIPLE_GROUP_COLOR = 90.0f;
 
-    private static final LatLng LIMA = new LatLng(-12.0158, -77.0758);
+//    private static final LatLng LIMA = new LatLng(-12.0158, -77.0758);
 
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 0;
 
@@ -124,7 +121,7 @@ public class MapTabFragment extends SupportMapFragment implements LoaderManager.
     public void onMapReady(GoogleMap googleMap) {
         Log.d(TAG, "Map is ready");
         mGoogleMap = googleMap;
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LIMA, 15));
+        //mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LIMA, 15));
 
         getLoaderManager().initLoader(LOCATION_LOADER, null, this);
 
@@ -159,6 +156,13 @@ public class MapTabFragment extends SupportMapFragment implements LoaderManager.
                     MY_PERMISSIONS_REQUEST_FINE_LOCATION);
             return;
         }
+        Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        LatLng currentLatLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+        CameraPosition currentCameraPosition = new CameraPosition.Builder()
+                .target(currentLatLng)
+                .zoom(17)
+                .build();
+        mGoogleMap.animateCamera(CameraUpdateFactory.newCameraPosition(currentCameraPosition));
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
@@ -210,7 +214,10 @@ public class MapTabFragment extends SupportMapFragment implements LoaderManager.
         Log.d(TAG, "Location changed ( longitude =  " + longitude + ", latitude = " + latitude + " )");
 
         if(NetworkUtilities.isOnline(getActivity())){
-            new SendLocationInfoTask().execute( Double.toString(longitude), Double.toString(latitude));
+            Intent sendLocationIntent = new Intent(getActivity(), SendLocationService.class);
+            sendLocationIntent.putExtra(SendLocationService.EXTRA_LONGITUDE, longitude);
+            sendLocationIntent.putExtra(SendLocationService.EXTRA_LATITUDE, latitude);
+            getActivity().startService(sendLocationIntent);
         }
         else{
             DbUtilities.insertTmpLocation(getActivity(), longitude, latitude);
@@ -313,30 +320,5 @@ public class MapTabFragment extends SupportMapFragment implements LoaderManager.
     public void onLoaderReset(Loader<Cursor> loader) {
         markerMap.clear();
         mGoogleMap.clear();
-    }
-
-
-    public class SendLocationInfoTask extends AsyncTask<String, Void, Void> {
-
-        @Override
-        protected Void doInBackground(String... params) {
-
-            long myID = Utilities.getMyID(getActivity());
-
-            JSONObject json = new JSONObject();
-            try {
-                json.put("longitude", params[0]);
-                json.put("latitude", params[1]);
-                json.put("user", Long.toString(myID));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            String BASE_URL_POST = NetworkUtilities.BASE_DOMAIN + "locations/";
-            NetworkUtilities.postJSON(BASE_URL_POST, json);
-
-
-            return null;
-        }
     }
 }
