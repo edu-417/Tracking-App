@@ -17,7 +17,9 @@ public class DbUtilities {
 
         if( cursor != null && cursor.getCount() > 0 ){
             cursor.moveToFirst();
-            return cursor.getLong(0);
+            long contactID = cursor.getLong(0);
+            cursor.close();
+            return contactID;
         }
 
         if(cursor != null)cursor.close();
@@ -42,7 +44,9 @@ public class DbUtilities {
 
         if( cursor != null && cursor.getCount() > 0 ){
             cursor.moveToFirst();
-            return cursor.getLong(0);
+            long profileID = cursor.getLong(0);
+            cursor.close();
+            return profileID;
         }
 
         if(cursor != null)cursor.close();
@@ -125,7 +129,9 @@ public class DbUtilities {
 
         if( cursor != null && cursor.getCount() > 0 ){
             cursor.moveToFirst();
-            return cursor.getLong(0);
+            long groupID = cursor.getLong(0);
+            cursor.close();
+            return groupID;
         }
 
         if(cursor != null)cursor.close();
@@ -149,7 +155,9 @@ public class DbUtilities {
 
         if( cursor != null && cursor.getCount() > 0 ){
             cursor.moveToFirst();
-            return cursor.getLong(0);
+            long contactGroupID = cursor.getLong(0);
+            cursor.close();
+            return contactGroupID;
         }
 
         if(cursor != null)cursor.close();
@@ -174,7 +182,9 @@ public class DbUtilities {
 
         if( cursor != null && cursor.getCount() > 0 ){
             cursor.moveToFirst();
-            return cursor.getLong(0);
+            long subscriptionID = cursor.getLong(0);
+            cursor.close();
+            return subscriptionID;
         }
 
         if(cursor != null)cursor.close();
@@ -199,7 +209,9 @@ public class DbUtilities {
 
         if( cursor != null && cursor.getCount() > 0 ){
             cursor.moveToFirst();
-            return cursor.getLong(0);
+            long subscriptionMemberID = cursor.getLong(0);
+            cursor.close();
+            return subscriptionMemberID;
         }
 
         if(cursor != null)cursor.close();
