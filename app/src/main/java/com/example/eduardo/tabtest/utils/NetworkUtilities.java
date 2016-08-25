@@ -146,4 +146,58 @@ public class NetworkUtilities {
         return Pair.create(-1, "Error Response Posting Json");
     }
 
+    public static Pair<Integer, String> putJSON(String baseURL, JSONObject json){
+        HttpURLConnection urlConnection = null;
+        OutputStreamWriter osw;
+
+        try {
+            URL url = new URL(baseURL);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("PUT");
+            urlConnection.setDoInput(true);
+            urlConnection.setDoOutput(true);
+            urlConnection.setRequestProperty( "Content-Type", "application/json" );
+            urlConnection.setRequestProperty( "Accept", "application/json" );
+            urlConnection.connect();
+
+            OutputStream os = urlConnection.getOutputStream();
+            osw = new OutputStreamWriter(os, "UTF-8");
+            Log.d(TAG, "PUT JSON: " + json.toString());
+            osw.write(json.toString());
+            osw.flush();
+            osw.close();
+
+            StringBuilder sb = new StringBuilder();
+            int HttpResult = urlConnection.getResponseCode();
+            String HttpResponseMessage = urlConnection.getResponseMessage();
+            if (HttpResult == HttpURLConnection.HTTP_OK || HttpResult == HttpURLConnection.HTTP_CREATED) {
+                BufferedReader br = new BufferedReader(
+                        new InputStreamReader(urlConnection.getInputStream(), "utf-8"));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line + "\n");
+                }
+                br.close();
+                HttpResponseMessage = sb.toString();
+            }
+
+            Log.d(TAG, "RESPONSE PUT JSON: " + HttpResponseMessage);
+            return Pair.create(HttpResult, HttpResponseMessage);
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            if(urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+
+        return Pair.create(-1, "Error Response Posting Json");
+    }
+
 }
