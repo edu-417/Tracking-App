@@ -29,6 +29,13 @@ public class Utilities {
         }
     }
 
+    public static void unsubscribeTopics(Context context, String token, String[] topics) throws IOException {
+        GcmPubSub pubSub = GcmPubSub.getInstance(context);
+        for (String topic : topics) {
+            pubSub.unsubscribe(token, "/topics/" + topic);
+        }
+    }
+
     public static String getMyToken(Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         return sharedPreferences.getString(MainActivity.TOKEN,"No token");
